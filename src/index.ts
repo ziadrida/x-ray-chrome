@@ -1,6 +1,8 @@
-import * as Puppeteer from 'puppeteer';
-import { Driver } from 'x-ray-crawler';
+import  {Driver}  from 'x-ray-crawler';
 import { Context } from 'http-context';
+import * as Puppeteer from 'puppeteer';
+//import URL from 'url-parse';
+import parse from 'url-parse';
 
 /**
  * Usage
@@ -27,14 +29,18 @@ export interface XRayChromeOptions extends Puppeteer.LaunchOptions {
      * A function that will be called after the page load and before the page content will be return giving the power to interact
      * with the current page using puppeteer methods like page.click([selector]).
      */
-    cl?: (page: Puppeteer.Page, ctx: Context) => void;
+    cl?: (page: Puppeteer.Page, ctx: Context, host: String) => void;
     /**
      * The options to set to page.goTo method.
      */
     navigationOptions?: Puppeteer.NavigationOptions;
 }
 
+
 export const xRayChrome = (options: XRayChromeOptions = {}): Driver => {
+
+   let page, browser;
+   let setup = false;
     const defaults: XRayChromeOptions = {
         viewPort: { width: 1280, height: 800 }
     };
@@ -46,14 +52,25 @@ export const xRayChrome = (options: XRayChromeOptions = {}): Driver => {
     } = Object.assign({}, defaults, options);
 
     return async (ctx, done) => {
-        const browser = await Puppeteer.launch(launchOptions);
-        const page = await browser.newPage();
+
+        if (!browser) browser = await Puppeteer.launch(launchOptions);
+
+        if (!page) {
+          page = await browser.newPage();
+          await page.setViewport(viewPort);
+        }
         try {
-            await page.setViewport(viewPort);
+
             await page.goto(ctx.url, navigationOptions);
-            if (typeof cl === 'function') {
-                await cl(page, ctx);
+            if (typeof cl === 'function' && !setup) {
+            //  console.log("call cl function")
+              //var parse =  URL(ctx.url);
+              var url = parse(ctx.url, true);
+              console.log('url:',url)
+              await cl(page, ctx, url.host);
+                setup = true;
             }
+            //console.log("after call to cl function call done?",setup)
 
             if (!ctx.body) {
                 ctx.body = await page.content();
@@ -62,7 +79,8 @@ export const xRayChrome = (options: XRayChromeOptions = {}): Driver => {
         } catch (err) {
            done(err, null);
         }
-        await browser.close();
+        // need to close browser! will do that later but now keep open
+        //await browser.close();
     };
 };
 

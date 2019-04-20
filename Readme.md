@@ -45,7 +45,8 @@ import xRay from 'x-ray';
 import xRayChrome from 'x-ray-chrome';
 
 const x = Xray().driver(xRayChrome({
-    cl: async (page, ctx) => {
+    cl: async (page, ctx,host) => {
+      if (host.match(/gitbug/) {
             // login in github
             await page.type('#login_field', 'github_username');
             await page.type('#password', 'github_password');
@@ -66,10 +67,13 @@ const x = Xray().driver(xRayChrome({
                 console.log('Repo already starred');
             }
             await page.screenshot({ path: 'star.png' });
+           }
             },
             navigationOptions: {
                 timeout: 30000,
-            }
+            },
+            headless:  true // set to false to see the browswer
+        
 }));
 
         const result = await x('https://github.com/login', 'form.js-social-form', {

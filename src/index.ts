@@ -1,8 +1,8 @@
 import  {Driver}  from 'x-ray-crawler';
 import { Context } from 'http-context';
 import * as Puppeteer from 'puppeteer';
-//import URL from 'url-parse';
-import parse from 'url-parse';
+
+//import parse from 'url-parse';
 
 /**
  * Usage
@@ -29,7 +29,7 @@ export interface XRayChromeOptions extends Puppeteer.LaunchOptions {
      * A function that will be called after the page load and before the page content will be return giving the power to interact
      * with the current page using puppeteer methods like page.click([selector]).
      */
-    cl?: (page: Puppeteer.Page, ctx: Context, host: String) => void;
+    cl?: (page: Puppeteer.Page, ctx: Context) => void;
     /**
      * The options to set to page.goTo method.
      */
@@ -65,9 +65,9 @@ export const xRayChrome = (options: XRayChromeOptions = {}): Driver => {
             if (typeof cl === 'function' && !setup) {
             //  console.log("call cl function")
               //var parse =  URL(ctx.url);
-              var url = parse(ctx.url, true);
-              console.log('url:',url)
-              await cl(page, ctx, url.host);
+             // var url = parse(ctx.url, true);
+             
+              await cl(page, ctx);
                 setup = true;
             }
             //console.log("after call to cl function call done?",setup)
